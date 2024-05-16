@@ -1,32 +1,39 @@
 import streamlit as st
-import speech_recognition as sr
+import pyaudio
+import numpy as np
 
-# Función para el reconocimiento de voz
-def reconocer_voz(audio_file):
-    # Inicializamos el reconocedor
-    recognizer = sr.Recognizer()
+# Función para detectar palmadas en el audio
+def detectar_palmadas(stream):
+    CHUNK = 1024
+    FORMAT = pyaudio.paInt16
+    CHANNELS = 1
+    RATE = 44100
+    THRESHOLD = 2000  # Umbral de detección de palmadas
 
-    # Cargamos el archivo de audio
-    with sr.AudioFile(audio_file) as source:
-        audio_data = recognizer.record(source)
-
-    # Realizamos la transcripción del audio a texto
-    try:
-        text = recognizer.recognize_google(audio_data, language="es-ES")
-        return text
-    except sr.UnknownValueError:
-        return "No se pudo reconocer el audio"
-    except sr.RequestError as e:
-        return f"No se pudo completar la solicitud: {e}"
+    while True:
+        data = stream.read(CHUNK)
+        audio_data = np.frombuffer(data, dtype=np.int16)
+        if max(audio_data) > THRESHOLD:
+            return True
 
 # Interfaz de usuario con Streamlit
-st.title("Reconocimiento de Voz")
+st.title("Detector de Palmadas")
 
-uploaded_audio = st.file_uploader("Subir archivo de audio", type=["wav"])
+# Configuración del dispositivo de audio
+audio = pyaudio.PyAudio()
+stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
 
-if uploaded_audio:
-    # Realizamos el reconocimiento de voz
-    transcription = reconocer_voz(uploaded_audio)
+st.write("Haga una palmada para iniciar la detección.")
 
-    # Mostramos la transcripción
-    st.write(f"Transcripción: {transcription}")
+if st.button("Iniciar Detección"):
+    st.write("Detección iniciada. Haga una palmada para detener.")
+    palmada_detectada = detectar_palmadas(stream)
+    if palmada_detectada:
+        st.write("Palmada detectada. ¡Bien hecho!")
+    else:
+        st.write("No se detectó ninguna palmada.")
+
+# Cierre del stream de audio
+stream.stop_stream()
+stream.close()
+audio.terminate()
