@@ -1,37 +1,40 @@
+import paho.mqtt.client as paho
+import time
+import json
 import streamlit as st
-import cv2
-import numpy as np
 import face_recognition
+from PIL import Image
 
-# Función para el reconocimiento facial
-def reconocer_cara(image):
-    # Cargamos la imagen y convertimos a RGB (ya que face_recognition requiere imágenes en RGB)
-    img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    
-    # Encontramos todas las caras en la imagen
-    face_locations = face_recognition.face_locations(img)
-    
-    # Iteramos sobre todas las caras encontradas y las marcamos con un rectángulo
-    for (top, right, bottom, left) in face_locations:
-        # Dibujamos un rectángulo alrededor de la cara
-        cv2.rectangle(image, (left, top), (right, bottom), (0, 255, 0), 2)
-    
-    return image
+def on_publish(client, userdata, result):
+    print("el dato ha sido publicado \n")
+    pass
 
-# Interfaz de usuario con Streamlit
-st.title("Reconocimiento Facial")
+def on_message(client, userdata, message):
+    global message_received
+    time.sleep(2)
+    message_received = str(message.payload.decode("utf-8"))
+    st.write(message_received)
 
-uploaded_image = st.file_uploader("Subir imagen de cámara", type=["jpg", "jpeg", "png"])
+broker = "broker.mqttdashboard.com"
+port = 1883
+client1 = paho.Client("APP_CERR")
+client1.on_message = on_message
+client1.on_publish = on_publish
+client1.connect(broker, port)
 
-if uploaded_image:
-    # Convertimos la imagen subida a un arreglo numpy
-    image = np.array(uploaded_image)
+st.title("Cerradura Inteligente")
+
+img_file_buffer = st.file_uploader("Subir imagen de cámara", type=["jpg", "jpeg", "png"])
+
+if img_file_buffer is not None:
+    # Convertir la imagen en un arreglo numpy
+    image = np.array(Image.open(img_file_buffer))
     
-    # Mostramos la imagen original
-    st.image(image, caption='Imagen subida', use_column_width=True)
+    # Reconocimiento facial
+    face_locations = face_recognition.face_locations(image)
     
-    # Realizamos el reconocimiento facial
-    image_with_faces = reconocer_cara(image)
-    
-    # Mostramos la imagen con las caras reconocidas
-    st.image(image_with_faces, caption='Caras reconocidas', use_column_width=True)
+    if face_locations:
+        st.success("Cara detectada. Abriendo la cerradura.")
+        client1.publish("IMIA", "{'gesto': 'Abre'}", qos=0, retain=False)
+    else:
+        st.error("No se detectó ninguna cara.")
