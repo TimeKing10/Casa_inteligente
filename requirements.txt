@@ -1,3 +1,7 @@
+paho-mqtt
 streamlit
-pyaudio
+opencv-python
+Pillow
 numpy
+pyaudio
+keras
