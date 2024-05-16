@@ -2,11 +2,11 @@ import paho.mqtt.client as paho
 import time
 import json
 import streamlit as st
-import cv2
 import numpy as np
 import pyaudio
 import struct
 import math
+import pyaudio
 
 #from PIL import Image
 from PIL import Image as Image, ImageOps as ImagOps
