@@ -3,10 +3,7 @@ import time
 import json
 import streamlit as st
 import numpy as np
-import pyaudio
-import struct
-import math
-import pyaudio
+import sounddevice as sd
 
 #from PIL import Image
 from PIL import Image as Image, ImageOps as ImagOps
@@ -64,54 +61,13 @@ if img_file_buffer is not None:
         client1.publish("Gestos", "Cierra", qos=0, retain=False)
         time.sleep(0.2)  
 
-FORMAT = pyaudio.paInt16
-SHORT_NORMALIZE = (1.0/32768.0)
-CHANNELS = 1
-RATE = 44100
-INPUT_BLOCK_TIME = 0.05
-INPUT_FRAMES_PER_BLOCK = int(RATE*INPUT_BLOCK_TIME)
+def detect_palmada(indata, frames, time, status):
+    amplitude = np.max(np.abs(indata))
+    print(amplitude)
+    if amplitude > 0.02:  # Adjust this threshold according to your environment
+        st.header('Detectada una palmada')
+        client1.publish("Palmadas", "Palmada", qos=0, retain=False)
+        time.sleep(0.2)
 
-def get_rms(block):
-    # RMS amplitude is defined as the square root of the 
-    # mean over time of the square of the amplitude.
-    # so we need to convert this string of bytes into 
-    # a string of 16-bit samples...
-
-    # we will get one short out for each 
-    # two chars in the string.
-    count = len(block)/2
-    format = "%dh"%(count)
-    shorts = struct.unpack( format, block )
-
-    # iterate over the block.
-    sum_squares = 0.0
-    for sample in shorts:
-        # sample is a signed short in +/- 32768. 
-        # normalize it to 1.0
-        n = sample * SHORT_NORMALIZE
-        sum_squares += n*n
-
-    return math.sqrt( sum_squares / count )
-
-p = pyaudio.PyAudio()
-stream = p.open(format=FORMAT,
-                channels=CHANNELS,
-                rate=RATE,
-                input=True,
-                output=True,
-                frames_per_buffer=INPUT_FRAMES_PER_BLOCK)
-
-try:
-    while True:
-        block = stream.read(INPUT_FRAMES_PER_BLOCK, exception_on_overflow=False)
-        amplitude = get_rms(block)
-        print(amplitude)
-        if amplitude > 0.02:  # Adjust this threshold according to your environment
-            st.header('Detectada una palmada')
-            client1.publish("Palmadas", "Palmada", qos=0, retain=False)
-            time.sleep(0.2)
-
-finally:
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
+with sd.InputStream(callback=detect_palmada):
+    st.write("Escuchando...")  # Stream will be closed automatically when you stop the app
