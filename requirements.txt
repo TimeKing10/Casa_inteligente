@@ -1,4 +1,5 @@
-Streamlit
-Paho MQTT
-Keras
-PIL 
+streamlit
+paho-mqtt
+keras
+pillow
+numpy
