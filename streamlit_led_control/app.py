@@ -36,7 +36,7 @@ model = load_model('keras_model.h5')
 data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
 
 # Interfaz de usuario de Streamlit
-st.title("Cerradura Inteligente")
+st.title("Casa_inteligente")
 
 img_file_buffer = st.camera_input("Toma una Foto")
 
