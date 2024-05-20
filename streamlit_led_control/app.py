@@ -34,7 +34,7 @@ except Exception as e:
 # Función para enviar mensaje de aplauso
 def send_clap():
     if client:
-        client.publish(mqtt_topic, "palmada")
+        client.publish(mqtt_topic, "Palmada")
         st.write("Mensaje de aplauso enviado.")
     else:
         st.write("Cliente MQTT no está inicializado.")
