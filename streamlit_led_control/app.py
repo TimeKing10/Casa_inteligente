@@ -54,11 +54,17 @@ if img_file_buffer is not None:
         prediction = model.predict(data)
         if prediction[0][0] > 0.3:
             st.header('Abriendo')
-            client1.publish("IMIA", json.dumps({"gesto": "Abre"}), qos=0, retain=False)
+            try:
+                client1.publish("IMIA", json.dumps({"gesto": "Abre"}), qos=0, retain=False)
+            except Exception as e:
+                st.write(f"Error al publicar mensaje MQTT: {e}")
             time.sleep(0.2)
         elif prediction[0][1] > 0.3:
             st.header('Cerrando')
-            client1.publish("IMIA", json.dumps({"gesto": "Cierra"}), qos=0, retain=False)
+            try:
+                client1.publish("IMIA", json.dumps({"gesto": "Cierra"}), qos=0, retain=False)
+            except Exception as e:
+                st.write(f"Error al publicar mensaje MQTT: {e}")
             time.sleep(0.2)
     except Exception as e:
         st.write(f"Error durante la predicción: {e}")
