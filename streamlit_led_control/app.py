@@ -1,28 +1,50 @@
-# Inicialización del cliente MQTT
+import paho.mqtt.client as mqtt
+import streamlit as st
+import numpy as np
+from PIL import Image
+from keras.models import load_model
+import json
+import time
+
+# Callback de publicación
+def on_publish(client, userdata, result):
+    st.write("El dato ha sido publicado")
+
+# Callback de mensaje
+def on_message(client, userdata, message):
+    st.write(f"Mensaje recibido: {str(message.payload.decode('utf-8'))}")
+
+# Configuración del broker MQTT
+broker = "broker.mqttdashboard.com"
+port = 1883
+
+# Función para inicializar el cliente MQTT
 def initialize_mqtt_client():
-    client = paho.Client("APP_CERR")
+    client = mqtt.Client("APP_CERR")
     client.on_message = on_message
     client.on_publish = on_publish
-    try:
-        client.connect(broker, port)
-        client.loop_start()  # Iniciar el bucle de la red en segundo plano
-        return client
-    except Exception as e:
-        st.write(f"Error al inicializar el cliente MQTT: {e}")
-        return None
+    client.connect(broker, port)
+    client.loop_start()
+    return client
 
-client1 = initialize_mqtt_client()
+client = initialize_mqtt_client()
 
+# Función para publicar mensajes
 def publish_message(client, topic, message):
-    if client is not None:
-        try:
-            client.publish(topic, json.dumps(message), qos=0, retain=False)
-        except Exception as e:
-            st.write(f"Error al publicar mensaje MQTT: {e}")
-            client.disconnect()
-            client = initialize_mqtt_client()
+    try:
+        client.publish(topic, json.dumps(message), qos=0, retain=False)
+    except Exception as e:
+        st.write(f"Error al publicar mensaje MQTT: {e}")
 
-# En tu bloque de predicción
+# Cargar el modelo de Keras
+model = load_model('keras_model.h5')
+data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+
+# Interfaz de usuario de Streamlit
+st.title("Casa Inteligente")
+
+img_file_buffer = st.camera_input("Toma una Foto")
+
 if img_file_buffer is not None:
     try:
         img = Image.open(img_file_buffer)
@@ -37,11 +59,11 @@ if img_file_buffer is not None:
         prediction = model.predict(data)
         if prediction[0][0] > 0.3:
             st.header('Abriendo')
-            publish_message(client1, "IMIA", {"gesto": "Abre"})
+            publish_message(client, "IMIA", {"gesto": "Abre"})
             time.sleep(0.2)
         elif prediction[0][1] > 0.3:
             st.header('Cerrando')
-            publish_message(client1, "IMIA", {"gesto": "Cierra"})
+            publish_message(client, "IMIA", {"gesto": "Cierra"})
             time.sleep(0.2)
     except Exception as e:
         st.write(f"Error durante la predicción: {e}")
