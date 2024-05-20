@@ -1,8 +1,4 @@
-paho-mqtt
 streamlit
-opencv-python
-Pillow
+opencv-python-headless
+paho-mqtt
 numpy
-keras
-sounddevice
-pyaudio
