@@ -1,45 +1,28 @@
-import paho.mqtt.client as paho
-import time
-import json
-import streamlit as st
-import numpy as np
-from PIL import Image
-from keras.models import load_model
-
-# Callback de publicación
-def on_publish(client, userdata, result):
-    st.write("El dato ha sido publicado")
-    pass
-
-# Callback de mensaje
-def on_message(client, userdata, message):
-    global message_received
-    message_received = str(message.payload.decode("utf-8"))
-    st.write(message_received)
-
-# Configuración del broker MQTT
-broker = "broker.mqttdashboard.com"
-port = 1883
-
 # Inicialización del cliente MQTT
-try:
-    client1 = paho.Client("APP_CERR")
-    client1.on_message = on_message
-    client1.on_publish = on_publish
-    client1.connect(broker, port)
-    client1.loop_start()  # Iniciar el bucle de la red en segundo plano
-except Exception as e:
-    st.write(f"Error al inicializar el cliente MQTT: {e}")
+def initialize_mqtt_client():
+    client = paho.Client("APP_CERR")
+    client.on_message = on_message
+    client.on_publish = on_publish
+    try:
+        client.connect(broker, port)
+        client.loop_start()  # Iniciar el bucle de la red en segundo plano
+        return client
+    except Exception as e:
+        st.write(f"Error al inicializar el cliente MQTT: {e}")
+        return None
 
-# Cargar el modelo de Keras
-model = load_model('keras_model.h5')
-data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
+client1 = initialize_mqtt_client()
 
-# Interfaz de usuario de Streamlit
-st.title("Casa_inteligente")
+def publish_message(client, topic, message):
+    if client is not None:
+        try:
+            client.publish(topic, json.dumps(message), qos=0, retain=False)
+        except Exception as e:
+            st.write(f"Error al publicar mensaje MQTT: {e}")
+            client.disconnect()
+            client = initialize_mqtt_client()
 
-img_file_buffer = st.camera_input("Toma una Foto")
-
+# En tu bloque de predicción
 if img_file_buffer is not None:
     try:
         img = Image.open(img_file_buffer)
@@ -54,17 +37,11 @@ if img_file_buffer is not None:
         prediction = model.predict(data)
         if prediction[0][0] > 0.3:
             st.header('Abriendo')
-            try:
-                client1.publish("IMIA", json.dumps({"gesto": "Abre"}), qos=0, retain=False)
-            except Exception as e:
-                st.write(f"Error al publicar mensaje MQTT: {e}")
+            publish_message(client1, "IMIA", {"gesto": "Abre"})
             time.sleep(0.2)
         elif prediction[0][1] > 0.3:
             st.header('Cerrando')
-            try:
-                client1.publish("IMIA", json.dumps({"gesto": "Cierra"}), qos=0, retain=False)
-            except Exception as e:
-                st.write(f"Error al publicar mensaje MQTT: {e}")
+            publish_message(client1, "IMIA", {"gesto": "Cierra"})
             time.sleep(0.2)
     except Exception as e:
         st.write(f"Error durante la predicción: {e}")
