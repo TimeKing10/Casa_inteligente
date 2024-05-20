@@ -1,8 +1,4 @@
-keras
-streamlit
-streamlit-webrtc
-numpy
-opencv-python-headless
-Pillow
-tensorflow==2.12
-paho-mqtt==1.6.1
+Streamlit
+Paho MQTT
+Keras
+PIL 
