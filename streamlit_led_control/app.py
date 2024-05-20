@@ -13,15 +13,20 @@ def on_connect(client, userdata, flags, rc):
     else:
         st.write(f"Falla en conexión, código de retorno: {rc}")
 
-# Inicializa cliente MQTT
-client_id = "control_led_app"
-client = mqtt.Client(client_id)
-client.on_connect = on_connect
-client.connect(mqtt_broker, mqtt_port, 60)
+try:
+    # Inicializa cliente MQTT
+    client_id = "control_led_app"
+    client = mqtt.Client(client_id)
+    client.on_connect = on_connect
+    client.connect(mqtt_broker, mqtt_port, 60)
+except ValueError as e:
+    st.write(f"Error al crear el cliente MQTT: {e}")
+except Exception as e:
+    st.write(f"Otro error ocurrió: {e}")
 
 # Función para enviar mensaje de aplauso
 def send_clap():
-    client.publish(mqtt_topic, "Palmada")
+    client.publish(mqtt_topic, "palmada")
     st.write("Mensaje de aplauso enviado.")
 
 # Interfaz de usuario de Streamlit
