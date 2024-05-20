@@ -1,28 +1,32 @@
 import streamlit as st
 import paho.mqtt.client as mqtt
 
-# Configuración de MQTT
+# Configuración del broker MQTT
 mqtt_broker = "broker.mqttdashboard.com"
-mqtt_topic_palmadas = "Palmadas"
-client_id = "StreamlitLedControl"
+mqtt_port = 1883
+mqtt_topic = "Palmadas"
 
-# Configuración de Streamlit
-st.title("Control de LED con Aplausos")
-st.write("Presiona el botón para simular un aplauso y controlar el LED.")
-
-# Función de callback para conexión MQTT
+# Callback de conexión al broker MQTT
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         st.write("Conectado al broker MQTT.")
     else:
-        st.write("Falla en conexión, código de retorno: ", rc)
+        st.write(f"Falla en conexión, código de retorno: {rc}")
 
 # Inicializa cliente MQTT
+client_id = "control_led_app"
 client = mqtt.Client(client_id)
 client.on_connect = on_connect
-client.connect(mqtt_broker)
+client.connect(mqtt_broker, mqtt_port, 60)
 
-# Botón para controlar LED con aplausos (Simulación)
+# Función para enviar mensaje de aplauso
+def send_clap():
+    client.publish(mqtt_topic, "Palmada")
+    st.write("Mensaje de aplauso enviado.")
+
+# Interfaz de usuario de Streamlit
+st.title("Control de LED con Aplausos")
+st.write("Presiona el botón para simular un aplauso y controlar el LED.")
+
 if st.button("Simular Aplauso"):
-    st.write("Simulando aplauso...")
-    client.publish(mqtt_topic_palmadas, "Palmada")
+    send_clap()
