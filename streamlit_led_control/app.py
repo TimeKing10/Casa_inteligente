@@ -20,19 +20,27 @@ port = 1883
 
 # Función para inicializar el cliente MQTT
 def initialize_mqtt_client():
-    client = mqtt.Client("APP_CERR")
-    client.on_message = on_message
-    client.on_publish = on_publish
-    client.connect(broker, port)
-    client.loop_start()
-    return client
+    try:
+        client = mqtt.Client("APP_CERR")
+        client.on_message = on_message
+        client.on_publish = on_publish
+        client.connect(broker, port)
+        client.loop_start()
+        return client
+    except ValueError as ve:
+        st.error(f"Error al inicializar el cliente MQTT (ValueError): {ve}")
+    except Exception as e:
+        st.error(f"Error al inicializar el cliente MQTT: {e}")
 
 client = initialize_mqtt_client()
 
 # Función para publicar mensajes
 def publish_message(client, topic, message):
     try:
-        client.publish(topic, json.dumps(message), qos=0, retain=False)
+        if client is not None:
+            client.publish(topic, json.dumps(message), qos=0, retain=False)
+        else:
+            st.error("El cliente MQTT no está inicializado.")
     except Exception as e:
         st.write(f"Error al publicar mensaje MQTT: {e}")
 
