@@ -22,11 +22,16 @@ def on_message(client, userdata, message):
 # Configuración del broker MQTT
 broker = "broker.mqttdashboard.com"
 port = 1883
-client1 = paho.Client("APP_CERR")
-client1.on_message = on_message
-client1.on_publish = on_publish
-client1.connect(broker, port)
-client1.loop_start()  # Iniciar el bucle de la red en segundo plano
+
+# Inicialización del cliente MQTT
+try:
+    client1 = paho.Client("APP_CERR")
+    client1.on_message = on_message
+    client1.on_publish = on_publish
+    client1.connect(broker, port)
+    client1.loop_start()  # Iniciar el bucle de la red en segundo plano
+except Exception as e:
+    st.write(f"Error al inicializar el cliente MQTT: {e}")
 
 # Cargar el modelo de Keras
 model = load_model('keras_model.h5')
