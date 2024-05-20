@@ -38,7 +38,7 @@ client = initialize_mqtt()
 def send_clap():
     if client:
         try:
-            client.publish(mqtt_topic, "palmada")
+            client.publish(mqtt_topic, "Palmada")
             st.write("Mensaje de aplauso enviado.")
         except Exception as e:
             st.write(f"Error al enviar el mensaje: {e}")
@@ -51,4 +51,3 @@ st.write("Presiona el botón para simular un aplauso y controlar el LED.")
 
 if st.button("Simular Aplauso"):
     send_clap()
-
