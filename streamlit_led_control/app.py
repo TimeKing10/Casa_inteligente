@@ -15,8 +15,9 @@ def on_connect(client, userdata, flags, rc):
 
 # Inicializa cliente MQTT
 client_id = "control_led_app"
-client = mqtt.Client(client_id)
+client = mqtt.Client(client_id, transport="tcp")
 client.on_connect = on_connect
+client._callback_api_version = 4  # Configura la versión de la API de callback
 
 # Intentar conectar al broker MQTT
 try:
