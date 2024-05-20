@@ -1,4 +1,4 @@
 streamlit
 opencv-python-headless
-paho-mqtt==1.6.1
+paho-mqtt
 numpy
